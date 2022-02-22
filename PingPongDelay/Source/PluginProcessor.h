@@ -61,15 +61,20 @@ public:
     float width{ 0.5 };
     float LFOTime{ 0.8 };
 
+    int currRead;
+    int currWrite;
+    const int maxSample = 2.0 * 44100;
+    int delaySample = delayTime / 1000 * 44100;
+
+    //==============================================================================
+    juce::AudioBuffer<float> delayBuffer;
+    juce::dsp::DelayLine<float> delayLine{ maxSample };
+
 private:
     //==============================================================================
     double lastSampleRate;
     int currPoint = 0;
-    int currRead = 0;
-    int currWrite = 0;
-
-    juce::AudioBuffer<float> delayBuffer;
-
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PingPongDelayAudioProcessor)
 };

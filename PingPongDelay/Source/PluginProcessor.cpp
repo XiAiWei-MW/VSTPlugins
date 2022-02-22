@@ -93,10 +93,21 @@ void PingPongDelayAudioProcessor::changeProgramName (int index, const juce::Stri
 //==============================================================================
 void PingPongDelayAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    lastSampleRate = sampleRate;
-    delayBuffer.setSize(2, 8000, false, true);
+    currRead = 0;
+    /*lastSampleRate = sampleRate;
+    delayBuffer.setSize(2, 2.0 * (sampleRate * samplesPerBlock));
+    currWrite = fminf(currRead + delayTime, 2.0) * (sampleRate * samplesPerBlock);
+    delayBuffer.clear();*/
+    //maxSample = 2.0 * getSampleRate() * getBlockSize();
+
+    juce::dsp::ProcessSpec spec;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = 2;
+    spec.sampleRate = sampleRate;
+
+    delayLine.prepare(spec);
+    delayLine.reset();
+    delayLine.setDelay(delaySample);
 }
 
 void PingPongDelayAudioProcessor::releaseResources()
@@ -137,31 +148,30 @@ void PingPongDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
+    /*juce::dsp::AudioBlock<float> block(buffer);
+    auto* channelLeft = block.getChannelPointer(0);
+    auto* channelRight = block.getChannelPointer(1);*/
+    auto* channelLeft = buffer.getWritePointer(0);
+    auto* channelRight = buffer.getWritePointer(1);
+
+    const int bufferLength = buffer.getNumSamples();
+
+    //juce::dsp::ProcessContextReplacing<float> context{ block };
+    //delayLine.process(context);
+
+    /*
     auto* channelLeft = buffer.getWritePointer(0);
     auto* channelRight = buffer.getWritePointer(1);
     auto* delayLeft = delayBuffer.getWritePointer(0);
     auto* delayRight = delayBuffer.getWritePointer(1);
+    */
 
-    int bufferSize = buffer.getNumSamples();
-    int delayBufferSize = delayBuffer.getNumSamples();
-
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-    //for (auto i = 0; i < delayBuffer.getNumChannels(); ++i)
-        //delayBuffer.clear(i, 0, delayBuffer.getNumSamples());
 
-    //DBG(bufferSize);
-    //DBG(delayBufferSize);
-
-    for (int i = 0; i < buffer.getNumSamples(); ++i)
+    for (auto i = 0; i < bufferLength; ++i)
     {
-        auto LFO = (int) (LFOTime * 44100 / 1000);
+        auto LFO = (int) (LFOTime * getSampleRate() / 1000);
         if (i % LFO == 0) { currPoint = 1 - currPoint; }
 
         float left = channelLeft[i];
@@ -180,11 +190,35 @@ void PingPongDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
             channelRight[i] = channelRight[i] * panning;
         }
 
-        float outputLeft = channelLeft[i] + wetDry * delayRight[currRead];
+        auto currDelayLeft = delayLine.popSample(0, delaySample, true);
+        auto currDelayRight = delayLine.popSample(1, delaySample, true);
+        //DBG(currDelayLeft << " " << currDelayRight);
+
+        float outputLeft = channelLeft[i] + wetDry * currDelayRight;
+        float outputRight = channelRight[i] + wetDry * currDelayLeft;
+        //DBG(outputLeft << " " << outputRight);
+
+        delayLine.pushSample(0, channelLeft[i] + currDelayRight * feedback);
+        delayLine.pushSample(1, channelRight[i] + currDelayLeft * feedback);
+        
+        if (currPoint == 0)
+        {
+            channelLeft[i] = (left + outputLeft * width) * gain;
+            channelRight[i] = right * gain;
+        }
+        else
+        {
+            channelLeft[i] = left * gain;
+            channelRight[i] = (right + outputRight * width) * gain;
+        }
+
+        /*float outputLeft = channelLeft[i] + wetDry * delayRight[currRead];
         float outputRight = channelRight[i] + wetDry * delayLeft[currRead];
 
         delayLeft[currWrite] = channelLeft[i] + (delayRight[currRead] * feedback);
         delayRight[currWrite] = channelRight[i] + (delayLeft[currRead] * feedback);
+
+        auto max_size = delayTime / 1000 * getSampleRate() * getBlockSize();
 
         if (++currRead >= delayBufferSize) { currRead = 0; }
         if (++currWrite >= delayBufferSize) { currWrite = 0; }
@@ -198,8 +232,8 @@ void PingPongDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
         {
             channelLeft[i] = left * gain;
             channelRight[i] = (right + outputRight * width) * gain;
-        }
-    }
+        }*/
+    } 
 }
 
 //==============================================================================

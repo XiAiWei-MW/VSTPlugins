@@ -26,7 +26,7 @@ PingPongDelayAudioProcessorEditor::PingPongDelayAudioProcessorEditor (PingPongDe
 
     // Delay Time slider
     delayTimeSlider.setSliderStyle(juce::Slider::LinearBar);
-    delayTimeSlider.setRange(0.0f, 3000.0f, 100.0f);
+    delayTimeSlider.setRange(0.0f, 2000.0f, 100.0f);
     delayTimeSlider.setPopupDisplayEnabled(true, false, this);
     delayTimeSlider.setValue(1000.0f);
     delayTimeSlider.addListener(this);
@@ -38,18 +38,10 @@ PingPongDelayAudioProcessorEditor::PingPongDelayAudioProcessorEditor (PingPongDe
     feedbackSlider.setValue(0.6f);
     feedbackSlider.addListener(this);
 
-    // LFO Slider
-    lfoSlider.setSliderStyle(juce::Slider::LinearBar);
-    lfoSlider.setRange(0.0f, 2.0f, 0.1f);
-    lfoSlider.setPopupDisplayEnabled(true, false, this);
-    lfoSlider.setValue(0.8f);
-    lfoSlider.addListener(this);
-
     // Visible
     addAndMakeVisible(&gainSlider);
     addAndMakeVisible(&delayTimeSlider);
     addAndMakeVisible(&feedbackSlider);
-    addAndMakeVisible(&lfoSlider);
 }
 
 PingPongDelayAudioProcessorEditor::~PingPongDelayAudioProcessorEditor()
@@ -73,7 +65,6 @@ void PingPongDelayAudioProcessorEditor::resized()
     gainSlider.setBounds(40, 50, getWidth() - 80, 40);
     delayTimeSlider.setBounds(40, 140, getWidth() - 80, 40);
     feedbackSlider.setBounds(40, 230, getWidth() - 80, 40);
-    lfoSlider.setBounds(40, 310, getWidth() - 80, 40);
 
     gainLabel.setText("Gain", juce::dontSendNotification);
     gainLabel.attachToComponent(&gainSlider, false);
@@ -81,8 +72,6 @@ void PingPongDelayAudioProcessorEditor::resized()
     delayTimeLabel.attachToComponent(&delayTimeSlider, false);
     feedbackLabel.setText("Feedback", juce::dontSendNotification);
     feedbackLabel.attachToComponent(&feedbackSlider, false);
-    lfoLabel.setText("LFO Time", juce::dontSendNotification);
-    lfoLabel.attachToComponent(&lfoSlider, false);
 
 }
 
@@ -90,18 +79,33 @@ void PingPongDelayAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &gainSlider)
     {
+        //DBG("gain value changed");
         audioProcessor.gain = gainSlider.getValue();
     }
     else if (slider == &delayTimeSlider)
     {
-        audioProcessor.delayTime = delayTimeSlider.getValue();
+        //DBG("delay time changed");
+        auto newDelayTime = delayTimeSlider.getValue() / 1000.0;
+        int newDelaySample = newDelayTime * 44100;
+
+        audioProcessor.delayTime = newDelayTime;
+
+        //int totalSample = newDelayTime * audioProcessor.getSampleRate() * audioProcessor.getBlockSize();
+        //int newDelaySample = std::min(totalSample, audioProcessor.maxSample);
+        DBG(newDelayTime << " " << newDelaySample << " " << audioProcessor.maxSample);
+        //DBG(audioProcessor.getSampleRate() << " " << audioProcessor.getBlockSize());
+        //DBG(audioProcessor.delayLine.getMaximumDelayInSamples());
+
+        audioProcessor.delaySample = newDelaySample;
+        audioProcessor.delayLine.setDelay(newDelaySample);
     }
     else if (slider == &feedbackSlider)
     {
         audioProcessor.feedback = feedbackSlider.getValue();
     }
-    else if (slider == &lfoSlider)
-    {
-        audioProcessor.LFOTime = lfoSlider.getValue();
-    }
+}
+
+void PingPongDelayAudioProcessorEditor::sliderDragEnded(juce::Slider* slider)
+{
+    
 }
