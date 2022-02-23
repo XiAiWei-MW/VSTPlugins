@@ -10,19 +10,12 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-PingPongDelayAudioProcessorEditor::PingPongDelayAudioProcessorEditor (PingPongDelayAudioProcessor& p)
+SimpleDelayAudioProcessorEditor::SimpleDelayAudioProcessorEditor (SimpleDelayAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (400, 450);
-
-    // Gain slider
-    gainSlider.setSliderStyle(juce::Slider::LinearBar);
-    gainSlider.setRange(0.0f, 1.0f, 0.1f);
-    gainSlider.setPopupDisplayEnabled(true, false, this);
-    gainSlider.setValue(1.0f);
-    gainSlider.addListener(this);
+    setSize(400, 450);
 
     // Delay Time slider
     delayTimeSlider.setSliderStyle(juce::Slider::LinearBar);
@@ -46,18 +39,17 @@ PingPongDelayAudioProcessorEditor::PingPongDelayAudioProcessorEditor (PingPongDe
     wetSlider.addListener(this);
 
     // Visible
-    addAndMakeVisible(&gainSlider);
     addAndMakeVisible(&delayTimeSlider);
     addAndMakeVisible(&feedbackSlider);
     addAndMakeVisible(&wetSlider);
 }
 
-PingPongDelayAudioProcessorEditor::~PingPongDelayAudioProcessorEditor()
+SimpleDelayAudioProcessorEditor::~SimpleDelayAudioProcessorEditor()
 {
 }
 
 //==============================================================================
-void PingPongDelayAudioProcessorEditor::paint (juce::Graphics& g)
+void SimpleDelayAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
@@ -66,17 +58,14 @@ void PingPongDelayAudioProcessorEditor::paint (juce::Graphics& g)
     g.setFont (15.0f);
 }
 
-void PingPongDelayAudioProcessorEditor::resized()
+void SimpleDelayAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
-    gainSlider.setBounds(40, 50, getWidth() - 80, 40);
     delayTimeSlider.setBounds(40, 140, getWidth() - 80, 40);
     feedbackSlider.setBounds(40, 230, getWidth() - 80, 40);
     wetSlider.setBounds(40, 320, getWidth() - 80, 40);
 
-    gainLabel.setText("Gain", juce::dontSendNotification);
-    gainLabel.attachToComponent(&gainSlider, false);
     delayTimeLabel.setText("Delay Time (ms)", juce::dontSendNotification);
     delayTimeLabel.attachToComponent(&delayTimeSlider, false);
     feedbackLabel.setText("Feedback", juce::dontSendNotification);
@@ -85,13 +74,9 @@ void PingPongDelayAudioProcessorEditor::resized()
     wetLabel.attachToComponent(&wetSlider, false);
 }
 
-void PingPongDelayAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
+void SimpleDelayAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 {
-    if (slider == &gainSlider)
-    {
-        audioProcessor.gain = gainSlider.getValue();
-    }
-    else if (slider == &delayTimeSlider)
+    if (slider == &delayTimeSlider)
     {
         auto newDelayTime = delayTimeSlider.getValue() / 1000.0;
         int newDelaySample = newDelayTime * 44100;
@@ -108,11 +93,6 @@ void PingPongDelayAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
     }
     else if (slider == &wetSlider)
     {
-        audioProcessor.wetDry= wetSlider.getValue();
+        audioProcessor.wetDry = wetSlider.getValue();
     }
-}
-
-void PingPongDelayAudioProcessorEditor::sliderDragEnded(juce::Slider* slider)
-{
-    
 }

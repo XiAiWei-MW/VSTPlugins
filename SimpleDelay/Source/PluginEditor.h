@@ -14,35 +14,28 @@
 //==============================================================================
 /**
 */
-class PingPongDelayAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Slider::Listener
+class SimpleDelayAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Slider::Listener
 {
 public:
-    PingPongDelayAudioProcessorEditor (PingPongDelayAudioProcessor&);
-    ~PingPongDelayAudioProcessorEditor() override;
+    SimpleDelayAudioProcessorEditor (SimpleDelayAudioProcessor&);
+    ~SimpleDelayAudioProcessorEditor() override;
 
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
     void sliderValueChanged(juce::Slider* slider) override;
-    void sliderDragEnded(juce::Slider* slider) override;
 
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-    PingPongDelayAudioProcessor& audioProcessor;
+    SimpleDelayAudioProcessor& audioProcessor;
 
-    //==============================================================================
-    juce::Slider gainSlider;
-    juce::Label gainLabel;
     juce::Slider delayTimeSlider;
     juce::Label delayTimeLabel;
     juce::Slider feedbackSlider;
     juce::Label feedbackLabel;
-    juce::Slider lfoSlider;
-    juce::Label lfoLabel;
     juce::Slider wetSlider;
     juce::Label wetLabel;
 
-    //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PingPongDelayAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleDelayAudioProcessorEditor)
 };

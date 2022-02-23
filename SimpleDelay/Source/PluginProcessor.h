@@ -13,12 +13,12 @@
 //==============================================================================
 /**
 */
-class PingPongDelayAudioProcessor  : public juce::AudioProcessor
+class SimpleDelayAudioProcessor  : public juce::AudioProcessor
 {
 public:
     //==============================================================================
-    PingPongDelayAudioProcessor();
-    ~PingPongDelayAudioProcessor() override;
+    SimpleDelayAudioProcessor();
+    ~SimpleDelayAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -54,27 +54,16 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     //==============================================================================
-    float gain{ 1.0 };
-    float delayTime{ 1000.0 };
-    float feedback{ 0.6 };
-    float wetDry{ 0.9 };
-    float width{ 0.5 };
-    float LFOTime{ 0.7 };
-
-    int currRead;
-    int currWrite;
+    float feedback{ 0.5 };
+    float wetDry{ 0.8 };
+    float delayTime{ 500.0 };
     const int maxSample = 2.0 * 44100;
     int delaySample = delayTime / 1000 * 44100;
 
     //==============================================================================
-    juce::AudioBuffer<float> delayBuffer;
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> delayLine{ maxSample };
 
 private:
     //==============================================================================
-    double lastSampleRate;
-    int currPoint = 0;
-    
-    //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PingPongDelayAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleDelayAudioProcessor)
 };
